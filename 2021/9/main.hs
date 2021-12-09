@@ -31,11 +31,7 @@ part1 m = sum $ map (riskLevel m) $ localMinima (0, 0) m
 contains  p l = any (== p) l
 
 collectBasin m s p@(x, y) = if   point m p < 9 && not (contains p s)
-                            then let [a,b,c,d] = neighbours p
-                                     b' = collectBasin m (p:s) a
-                                     c' = collectBasin m b'    b
-                                     d' = collectBasin m c'    c
-                                 in       collectBasin m d'    d
+                            then foldl (collectBasin m) (p:s) (neighbours p)
                             else s
 
 collectBasins m = map (collectBasin m [])

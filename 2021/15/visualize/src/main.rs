@@ -3,8 +3,10 @@ mod grid;
 use std::fs;
 use grid::*;
 use minifb::*;
+use std::time::Duration;
 
 fn main() {
+	let fps = 60;
     let grid = Grid::parse_input(fs::read("../input.txt").unwrap());
 
     //println!("{}", grid.bfs());
@@ -36,9 +38,9 @@ fn main() {
 		}
 	});
 
-	use std::time::Duration;
-    println!("{}", grid.bfs(|flood, scan| {
-		std::thread::sleep(Duration::from_nanos(1_000_000_000 / 60));
+	// Flood fill
+    let flood = grid.bfs(|flood, scan| {
+		std::thread::sleep(Duration::from_nanos(1_000_000_000 / fps));
 		for c in buffer.iter_mut() {
 			*c &= 0x00_ff_ff;
 		}
@@ -50,7 +52,27 @@ fn main() {
 			buffer[y * w + x] |= 0xff_00_00;
 		}
 		window.update_with_buffer(&buffer, w, h).unwrap();
-	}));
+	});
+	println!("{}", flood.get(flood.width() - 1, flood.height() - 1).unwrap());
+
+	// Walk back
+	let (mut x, mut y) = (flood.width() - 1, flood.height() - 1);
+	while (x, y) != (0, 0) {
+		buffer[y * w + x] = 0xff_00_00;
+		window.update_with_buffer(&buffer, w, h).unwrap();
+
+		let f = |(dx, dy)| flood
+			.get(x.wrapping_add(dx as usize), y.wrapping_add(dy as usize))
+			.unwrap_or(usize::MAX);
+		let (dx, dy) = [(-1isize, 0isize), (0, -1), (1, 0), (0, 1)]
+			.iter().copied().min_by(|a, b| f(*a).cmp(&f(*b))).unwrap();
+		x = x.wrapping_add(dx as usize);
+		y = y.wrapping_add(dy as usize);
+
+		std::thread::sleep(Duration::from_nanos(1_000_000_000 / fps));
+	}
+	println!("Done");
+	
 
 	std::thread::sleep(Duration::MAX);
 }

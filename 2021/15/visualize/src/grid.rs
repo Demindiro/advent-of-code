@@ -35,7 +35,7 @@ impl Grid {
 		&self.data
 	}
 
-    pub fn bfs<F>(&self, mut feedback: F) -> usize
+    pub fn bfs<F>(&self, mut feedback: F) -> Self
 	where
 		F: FnMut(&Self, &HashSet<(usize, usize)>),
 	{
@@ -51,7 +51,7 @@ impl Grid {
         loop {
 			feedback(&flood, &scan);
             if scan.is_empty() {
-                return flood.get(self.width - 1, self.height - 1).unwrap();
+                return flood;
             }
             for (x, y) in scan.drain() {
                 let v = flood.get(x, y).unwrap();

@@ -1,4 +1,4 @@
-use std::collections::HashSet;
+use std::collections::{BTreeSet, HashSet};
 use std::mem;
 
 pub struct Grid {
@@ -23,33 +23,34 @@ impl Grid {
         }
     }
 
-	pub fn width(&self) -> usize {
-		self.width
-	}
+    pub fn width(&self) -> usize {
+        self.width
+    }
 
-	pub fn height(&self) -> usize {
-		self.height
-	}
+    pub fn height(&self) -> usize {
+        self.height
+    }
 
-	pub fn data(&self) -> &[usize] {
-		&self.data
-	}
+    pub fn data(&self) -> &[usize] {
+        &self.data
+    }
 
+    // "diagonal"
     pub fn bfs<F>(&self, mut feedback: F) -> Self
-	where
-		F: FnMut(&Self, &HashSet<(usize, usize)>),
-	{
+    where
+        F: FnMut(&Self, &HashSet<(usize, usize)>),
+    {
         let mut flood = Self {
             width: self.width,
             height: self.height,
             data: self.data.iter().map(|_| usize::MAX).collect(),
         };
-		flood.data[0] = 0;
+        flood.data[0] = 0;
         let mut scan = HashSet::new();
         let mut scan_next = HashSet::new();
         scan.insert((0, 0));
         loop {
-			feedback(&flood, &scan);
+            feedback(&flood, &scan);
             if scan.is_empty() {
                 return flood;
             }
@@ -59,7 +60,7 @@ impl Grid {
                     let v = v + self.get(x, y).unwrap();
                     if v < flood.get(x, y).unwrap() {
                         flood.set(x, y, v).unwrap();
-						scan_next.insert((x, y));
+                        scan_next.insert((x, y));
                     }
                 };
                 (x < self.width - 1).then(|| f(x + 1, y));
@@ -71,21 +72,47 @@ impl Grid {
         }
     }
 
+    // "horizontal"
+    pub fn bfs2<F>(&self, mut feedback: F) -> Self
+    where
+        F: FnMut(&Self, (usize, usize)),
+    {
+        let mut flood = Self {
+            width: self.width,
+            height: self.height,
+            data: self.data.iter().map(|_| usize::MAX).collect(),
+        };
+        flood.data[0] = 0;
+        let mut scan = BTreeSet::new();
+        scan.insert((0, 0));
+        while let Some(pos @ (x, y)) = scan.pop_first() {
+            feedback(&flood, pos);
+            let v = flood.get(x, y).unwrap();
+            let mut f = |x, y| {
+                let v = v + self.get(x, y).unwrap();
+                if v < flood.get(x, y).unwrap() {
+                    flood.set(x, y, v).unwrap();
+                    scan.insert((x, y));
+                }
+            };
+            (x < self.width - 1).then(|| f(x + 1, y));
+            (y < self.height - 1).then(|| f(x, y + 1));
+            (x > 0).then(|| f(x - 1, y));
+            (y > 0).then(|| f(x, y - 1));
+        }
+        return flood;
+    }
+
     pub fn enlarge(self, n: usize) -> Self {
         let (sx, sy) = (self.width, self.height);
-        let f = |x, y, mx, my| -> usize {
-			(mx + my + self.get(x, y).unwrap() - 1) % 9 + 1
-		};
+        let f = |x, y, mx, my| -> usize { (mx + my + self.get(x, y).unwrap() - 1) % 9 + 1 };
         Self {
             width: self.width * n,
             height: self.height * n,
-            data: (0..n).flat_map(move |my| {
-					(0..sy).flat_map(move |y| {
-						(0..n).flat_map(move |mx| {
-							(0..sx).map(move |x| {
-								f(x, y, mx, my)
-							})
-						})
+            data: (0..n)
+                .flat_map(move |my| {
+                    (0..sy).flat_map(move |y| {
+                        (0..n).flat_map(move |mx| (0..sx).map(move |x| f(x, y, mx, my)))
                     })
                 })
                 .collect(),
@@ -93,10 +120,14 @@ impl Grid {
     }
 
     pub fn get(&self, x: usize, y: usize) -> Option<usize> {
-        (x < self.width && y < self.height).then(|| self.data.get(y * self.width + x).copied()).flatten()
+        (x < self.width && y < self.height)
+            .then(|| self.data.get(y * self.width + x).copied())
+            .flatten()
     }
 
     fn set(&mut self, x: usize, y: usize, value: usize) -> Option<()> {
-        (x < self.width && y < self.height).then(|| self.data.get_mut(y * self.width + x).map(|v| *v = value)).flatten()
+        (x < self.width && y < self.height)
+            .then(|| self.data.get_mut(y * self.width + x).map(|v| *v = value))
+            .flatten()
     }
 }

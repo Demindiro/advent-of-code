@@ -1,13 +1,10 @@
-import Data.List (foldl')
+{-# LANGUAGE BangPatterns #-}
+
 import Data.List.Ordered (nubSort)
 import Data.List.Split (splitOn)
-import qualified Data.Array.Unboxed as A
---import qualified Data.STUArray as STU
-import qualified Data.Set   as S
-import qualified Data.IntMap.Strict as M
-import Debug.Trace
+import qualified Data.Array.Unboxed  as A
+import qualified Data.IntMap.Strict  as M
 
---data Bool = True | False deriving (Eq, Show)
 type Point = (Int, Int, Int)
 -- Areas are half-open!
 type Area  = (Point, Point)
@@ -31,27 +28,26 @@ intersection (a, b) (l, h) = (f max a l, f min b h)
 
 valid ((lx,ly,lz),(hx,hy,hz)) = lx < hx && ly < hy && lz < hz
 
-size ((a,b,c),(d,e,f)) = product [d-a,e-b,f-c]
-
 main = do
-  steps' <- map parse <$> lines <$> readFile "input.txt"
-  --let steps = filter (valid . snd)
-  --          $ map (\(o,a) -> (o, intersection bounds a)) steps'
-  let steps = steps'
+  steps <- map parse <$> lines <$> readFile "input.txt"
+  --let steps' = filter (valid . snd) $ map bounds steps
   let (x',y',z') = unzip3 $ foldMap (\(_,(a,b)) -> [a,b]) steps
   let [x, y, z ] = map nubSort [x', y', z']
-  let [mx,my,mz] = map M.fromList [zip x [0..], zip y [0..], zip z [0..]]
+  let ![ax,ay,az] = let f l = A.listArray (0, length l - 1) l
+                        f :: [Int] -> A.UArray Int Int
+                    in  [f x, f y, f z]
+  let ![mx,my,mz] = map M.fromList [zip x [0..], zip y [0..], zip z [0..]]
   let grid = A.listArray ((0,0,0),(length x,length y,length z)) $ repeat False
       grid :: A.UArray Point Bool
-  let step (o,((lx,ly,lz),(hx,hy,hz))) g = g'
+  let step g (o,((lx,ly,lz),(hx,hy,hz))) = g'
         where [sx, sy, sz] =          [mx M.! lx, my M.! ly, mz M.! lz]
               [ex, ey, ez] = map pred [mx M.! hx, my M.! hy, mz M.! hz]
               l  = [((x,y,z),o) | x <- [sx..ex], y <- [sy..ey], z <- [sz..ez]]
               g' = A.accum seq g l :: A.UArray Point Bool
   let size (ix,iy,iz) = product [ex - sx, ey - sy, ez - sz]
-        where [sx, sy, sz] = [x !!      ix, y !!      iy, z !!      iz]
-              [ex, ey, ez] = [x !! succ ix, y !! succ iy, z !! succ iz]
-  let count = sum . map (size . fst) . filter ((==True) . snd) . A.assocs
-  print $ count $ foldl' (flip step) grid steps
+        where [sx, sy, sz] = [ax A.!      ix, ay A.!      iy, az A.!      iz]
+              [ex, ey, ez] = [ax A.! succ ix, ay A.! succ iy, az A.! succ iz]
+  let count = sum . map (size . fst) . filter snd . A.assocs
+  print $ count $ foldl step grid steps
   where
-    bounds = ((-50,-50,-50),(51,51,51))
+    bounds (o,a) = (o, intersection ((-50,-50,-50),(51,51,51)) a)

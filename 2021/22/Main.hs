@@ -9,7 +9,6 @@ type Point = (Int, Int, Int)
 -- Areas are half-open!
 type Area  = (Point, Point)
 type Step  = (Bool, Area)
-type Grid  = A.Array Point Bool
 
 parse :: String -> Step
 parse s | ('o':'n':' ':s')     <- s = (True , f s')
@@ -47,7 +46,15 @@ main = do
   let size (ix,iy,iz) = product [ex - sx, ey - sy, ez - sz]
         where [sx, sy, sz] = [ax A.!      ix, ay A.!      iy, az A.!      iz]
               [ex, ey, ez] = [ax A.! succ ix, ay A.! succ iy, az A.! succ iz]
-  let count = sum . map (size . fst) . filter snd . A.assocs
+  -- This long version reduces runtime from ~58 sec to ~12
+  -- A.assocs is very slow :(
+  let count :: A.UArray Point Bool -> Int
+      count g = sum [ size (x,y,z)
+                    | x <- [0..length x-1]
+                    , y <- [0..length y-1]
+                    , z <- [0..length z-1]
+                    , g A.! (x,y,z)
+                    ]
   print $ count $ foldl step grid steps'
   print $ count $ foldl step grid steps
   where

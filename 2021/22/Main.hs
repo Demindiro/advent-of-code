@@ -55,7 +55,6 @@ main = do
                     , z <- [0..length z-1]
                     , g A.! (x,y,z)
                     ]
-  print $ count $ foldl step grid steps'
-  print $ count $ foldl step grid steps
+  mapM_ (print . count . foldl step grid) [steps', steps]
   where
     bounds (o,a) = (o, intersection ((-50,-50,-50),(51,51,51)) a)

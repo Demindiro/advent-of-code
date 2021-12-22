@@ -30,7 +30,7 @@ valid ((lx,ly,lz),(hx,hy,hz)) = lx < hx && ly < hy && lz < hz
 
 main = do
   steps <- map parse <$> lines <$> readFile "input.txt"
-  --let steps' = filter (valid . snd) $ map bounds steps
+  let steps' = filter (valid . snd) $ map bounds steps
   let (x',y',z') = unzip3 $ foldMap (\(_,(a,b)) -> [a,b]) steps
   let [x, y, z ] = map nubSort [x', y', z']
   let ![ax,ay,az] = let f l = A.listArray (0, length l - 1) l
@@ -48,6 +48,7 @@ main = do
         where [sx, sy, sz] = [ax A.!      ix, ay A.!      iy, az A.!      iz]
               [ex, ey, ez] = [ax A.! succ ix, ay A.! succ iy, az A.! succ iz]
   let count = sum . map (size . fst) . filter snd . A.assocs
+  print $ count $ foldl step grid steps'
   print $ count $ foldl step grid steps
   where
     bounds (o,a) = (o, intersection ((-50,-50,-50),(51,51,51)) a)

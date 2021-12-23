@@ -31,7 +31,7 @@ cost D = 1000
 
 room (a,b,c,d) = FFFF a b c d
 
-burrow a b c d = Burrow (A.listArray (0,6) $ repeat Nothing)
+burrow a b c d = Burrow (A.listArray (0,10) $ repeat Nothing)
                         (A.listArray (0,3) $ map room [a,b,c,d])
          
 input = burrow (D,D,D,B) (C,B,C,B) (A,A,B,C) (A,C,A,D)
@@ -54,43 +54,24 @@ popRoom _              = Nothing
 
 putHallway ri e hi hw | any isJust c = Nothing
                       | otherwise    = Just $ hw A.// [(hi, Just e)]
-  where b x y = map revHallwayPos [min x y .. max x y]
-        c = [hw A.! i | Just i <- b (roomPos ri) (hallwayPos hi)]
+  where b x y = [min x y .. max x y]
+        c = [hw A.! i | i <- b (roomPos ri) hi]
 
 takeHallway ri hi hw | any isJust c        = Nothing
                      | Just e <- hw A.! hi = Just (e, hw A.// [(hi, Nothing)])
                      | otherwise           = Nothing
-  where b x y = map revHallwayPos [min x y .. max x y]
-        c = [hw A.! i | Just i <- b (roomPos ri) (hallwayPos hi), i /= hi]
+  where b x y = [min x y .. max x y]
+        c = [hw A.! i | i <- b (roomPos ri) hi, i /= hi]
 
 roomPos 0 = 2
 roomPos 1 = 4
 roomPos 2 = 6
 roomPos 3 = 8
 
-revRoomPos 2 = 0
-revRoomPos 4 = 1
-revRoomPos 6 = 2
-revRoomPos 8 = 3
+roomPositions = [2,4,6,8]
+hallwayPositions = [0,1,3,5,7,9,10]
 
-hallwayPos 0 =  0
-hallwayPos 1 =  1
-hallwayPos 2 =  3
-hallwayPos 3 =  5
-hallwayPos 4 =  7
-hallwayPos 5 =  9
-hallwayPos 6 = 10
-
-revHallwayPos  0 = Just 0
-revHallwayPos  1 = Just 1
-revHallwayPos  3 = Just 2
-revHallwayPos  5 = Just 3
-revHallwayPos  7 = Just 4
-revHallwayPos  9 = Just 5
-revHallwayPos 10 = Just 6
-revHallwayPos  _ = Nothing
-
-distance ri hi = abs $ roomPos ri - hallwayPos hi
+distance ri hi = abs $ roomPos ri - hi
 
 moveToHallway :: RoomId -> HallwayPos -> Burrow -> Maybe (Burrow, Cost)
 moveToHallway ri hi (Burrow hw rms) = do
@@ -133,17 +114,18 @@ type SB = S.Set Burrow
 
 solve :: Burrow -> Cost
 solve b = loop S.empty $ H.singleton (0, b)
-  where loop :: SB -> PH -> Cost
-        loop s m | solved b  = c 
-                 | otherwise = loop s' m''
-          where ((c, b), m') = fromJust $ H.view m
-                lh  = [moveToHallway r h b | r <- [0..3], h <- [0..6]]
-                lr  = [moveToRoom    h r b | r <- [0..3], h <- [0..6]]
-                l   = h lr ++ h lh
-                h = filter (\(b,c) -> S.notMember b s)
-                  . filter (not . unsolvable . fst)
-                  . catMaybes
-                m'' = foldr H.insert m' $ map (\(b,c') -> (c + c', b)) l
-                s' = S.insert b s
+  where
+    loop :: SB -> PH -> Cost
+    loop s m | solved b  = c
+             | otherwise = loop s' m''
+      where ((c, b), m') = fromJust $ H.view m
+            lh  = [moveToHallway r h b | r <- [0..3], h <- hallwayPositions]
+            lr  = [moveToRoom    h r b | r <- [0..3], h <- hallwayPositions]
+            l   = h lr ++ h lh
+            h = filter (\(b,c) -> S.notMember b s)
+              . filter (not . unsolvable . fst)
+              . catMaybes
+            m'' = foldr H.insert m' $ map (\(b,c') -> (c + c', b)) l
+            s' = S.insert b s
 
 main = print $ solve input

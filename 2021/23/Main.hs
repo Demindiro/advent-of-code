@@ -1,7 +1,7 @@
+import qualified Data.PQueue.Prio.Min as P
 import qualified Data.Array  as A
 import qualified Data.IntMap as M
 import qualified Data.Set    as S
-import qualified Data.Heap   as H
 import Data.Maybe (isJust, isNothing)
 import Data.Maybe (catMaybes, fromJust)
 
@@ -109,23 +109,23 @@ unsolvable (Burrow _ rm) = f A 0 || f B 1 || f C 2 || f D 3
         g e (L    a      ) = a /= e
         g e _              = False
 
-type PH = H.MinPrioHeap Cost Burrow
+type PH = P.MinPQueue Cost Burrow
 type SB = S.Set Burrow
 
 solve :: Burrow -> Cost
-solve b = loop S.empty $ H.singleton (0, b)
+solve b = loop S.empty $ P.singleton 0 b
   where
     loop :: SB -> PH -> Cost
     loop s m | solved b  = c
              | otherwise = loop s' m''
-      where ((c, b), m') = fromJust $ H.view m
+      where ((c, b), m') = fromJust $ P.minViewWithKey m
             lh  = [moveToHallway r h b | r <- [0..3], h <- hallwayPositions]
             lr  = [moveToRoom    h r b | r <- [0..3], h <- hallwayPositions]
             l   = h lr ++ h lh
             h = filter (\(b,c) -> S.notMember b s)
               . filter (not . unsolvable . fst)
               . catMaybes
-            m'' = foldr H.insert m' $ map (\(b,c') -> (c + c', b)) l
+            m'' = foldr (uncurry P.insert) m' $ map (\(b,c') -> (c + c', b)) l
             s' = S.insert b s
 
 main = print $ solve input

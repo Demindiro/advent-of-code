@@ -1,0 +1,168 @@
+inp w
+
+inp w
+ld  y w
+add y 12
+ld  z y
+
+inp w
+ld  x z
+add x 15
+nql x w
+ld  y 25
+mul y x
+add y 1
+mul z y
+ld  y w
+add y 9
+mul y x
+add z y
+
+inp w
+ld  x z
+mod x 26
+div z 26
+add x -6
+nql x w
+ld  y 25
+mul y x
+add y 1
+mul z y
+ld  y w
+add y 12
+mul y x
+add z y
+inp w
+ld  x z
+mod x 26
+add x 15
+nql x w
+ld  y 25
+mul y x
+add y 1
+mul z y
+ld  y w
+add y 2
+mul y x
+add z y
+inp w
+ld  x z
+mod x 26
+div z 26
+add x -8
+nql x w
+ld  y 25
+mul y x
+add y 1
+mul z y
+ld  y w
+add y 1
+mul y x
+add z y
+inp w
+ld  x z
+mod x 26
+div z 26
+add x -4
+nql x w
+ld  y 25
+mul y x
+add y 1
+mul z y
+ld  y w
+add y 1
+mul y x
+add z y
+inp w
+ld  x z
+mod x 26
+add x 15
+nql x w
+ld  y 25
+mul y x
+add y 1
+mul z y
+ld  y w
+add y 13
+mul y x
+add z y
+inp w
+ld  x z
+mod x 26
+add x 10
+nql x w
+ld  y 25
+mul y x
+add y 1
+mul z y
+ld  y w
+add y 1
+mul y x
+add z y
+inp w
+ld  x z
+mod x 26
+add x 11
+nql x w
+ld  y 25
+mul y x
+add y 1
+mul z y
+ld  y w
+add y 6
+mul y x
+add z y
+inp w
+ld  x z
+mod x 26
+div z 26
+add x -11
+nql x w
+ld  y 25
+mul y x
+add y 1
+mul z y
+ld  y w
+add y 2
+mul y x
+add z y
+inp w
+ld  x z
+mod x 26
+div z 26
+add x 0
+nql x w
+ld  y 25
+mul y x
+add y 1
+mul z y
+ld  y w
+add y 11
+mul y x
+add z y
+
+inp w
+ld  x z
+mod x 26
+div z 26
+add x -8
+nql x w
+ld  y 25
+mul y x
+add y 1
+mul z y
+ld  y w
+add y 10
+mul y x
+add z y
+
+inp w
+ld  x z		# z in [8..17]
+mod x 26
+div z 26	# z in [0..25]
+add x -7	# x in [8..17]
+nql x w		# get x == w
+ld  y w		# y in [1..9]
+add y 3		# forget about y == 0
+mul y x		# Get x to be 0
+add z y		# Get z to be 0 too

@@ -23,13 +23,28 @@ public:
 		}
 		return n;
 	}
+
+	size_t remove_some(Grid &out) const {
+		size_t n = 0;
+		out.cells.clear();
+		for (size_t y = 0; y < height; y++) {
+			for (size_t x = 0; x < width; x++) {
+				bool present = get(x, y), can_remove = neighbors(x, y) < 4;
+				n += present && can_remove;
+				out.cells.push_back(present && !can_remove);
+			}
+		}
+		out.width = width;
+		out.height = height;
+		return n;
+	}
 };
 
 int main(int argc, char **argv) {
 	(void)argv;
-	(void)argc;
+	bool repeat = argc > 1;
 
-	Grid grid;
+	Grid grid, next_grid;
 
 	std::string line;
 	while (std::getline(std::cin, line)) {
@@ -40,20 +55,13 @@ int main(int argc, char **argv) {
 	}
 	grid.height = grid.cells.size() / grid.width;
 
-
 	size_t sum = 0;
-	for (size_t y = 0; y < grid.height; y++) {
-		for (size_t x = 0; x < grid.width; x++) {
-			if (grid.get(x, y) && grid.neighbors(x, y) < 4)
-				std::cout << "x";
-			else if (grid.get(x, y))
-				std::cout << "@";
-			else
-				std::cout << ".";
-			sum += grid.get(x, y) && grid.neighbors(x, y) < 4;
-		}
-		std::cout << std::endl;
-	}
+	size_t n;
+	do {
+		n = grid.remove_some(next_grid);
+		sum += n;
+		std::swap(grid, next_grid);
+	} while (repeat && n != 0);
 	std::cout << sum << std::endl;
 
 	return 0;

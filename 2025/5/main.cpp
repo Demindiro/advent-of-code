@@ -93,7 +93,7 @@ public:
 
 int main(int argc, char **argv) {
 	(void)argv;
-	(void)argc;
+	bool all = argc > 1;
 
 	std::string line;
 	RangeSet<long long> ranges;
@@ -121,9 +121,15 @@ int main(int argc, char **argv) {
 	}
 
 	long long sum = 0;
-	while (std::getline(std::cin, line)) {
-		long long x = atoll(line.c_str());
-		sum += ranges.has(x);
+	if (all) {
+		for (const auto [x, y] : ranges.ranges) {
+			sum += y - x;
+		}
+	} else {
+		while (std::getline(std::cin, line)) {
+			long long x = atoll(line.c_str());
+			sum += ranges.has(x);
+		}
 	}
 	std::cout << sum << std::endl;
 

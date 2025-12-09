@@ -54,7 +54,7 @@ int main(int argc, char **argv) {
 	}
 
 	std::cout << count << std::endl;
-	std::cout << std::accumulate(timelines.begin(), timelines.end(), 0) << std::endl;
+	std::cout << std::accumulate(timelines.begin(), timelines.end(), 0LL) << std::endl;
 
 	return 0;
 }

@@ -72,6 +72,7 @@ int main(int argc, char **argv) {
 		std::cerr << "usafe: aoc8 <pair count>" << std::endl;
 		return 1;
 	}
+	// part 2: just use some huge number
 	size_t pair_count = atoll(argv[1]);
 
 	std::string line;
@@ -103,8 +104,8 @@ int main(int argc, char **argv) {
 			return 1;
 		}
 		const Connection &n = wires.top();
-		{
-			Pos a = boxes[n.a], b = boxes[n.b];
+		Pos a = boxes[n.a], b = boxes[n.b];
+		if (0) {
 			std::cout << n.len2;
 			std::cout << " ";
 			std::cout << a.x << "," << a.y << "," << a.z;
@@ -112,14 +113,16 @@ int main(int argc, char **argv) {
 			std::cout << b.x << "," << b.y << "," << b.z;
 			std::cout << std::endl;
 		}
-		bfs.count(n.a);
-		// ok
-		//pairs += bfs.visited.find(n.b) == bfs.visited.end();
 		pairs += 1;
-		bfs.visited.clear();
 		bfs.connect(n.a, n.b);
 		wires.pop();
+		bfs.visited.clear();
+		if (bfs.count(n.a) == boxes.size()) {
+			std::cout << a.x << " * " << b.x << " = " << (long long)a.x * b.x << std::endl;
+			break;
+		}
 	}
+	bfs.visited.clear();
 
 	std::cout << pair_count << std::endl;
 	std::cout << std::endl;
